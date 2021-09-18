@@ -217,9 +217,9 @@ main()
             script="%a %d/%m %I:%M %p ${timezone} "
           else
             script="%a %m/%d %I:%M %p ${timezone} "
-          fi
+          fi;;
         true)
-          script=${time_format}
+          script=${time_format};;
       esac
     fi
 
