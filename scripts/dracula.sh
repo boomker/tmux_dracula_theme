@@ -188,9 +188,9 @@ main()
       script="#($current_dir/network_ping.sh)"
     fi
 
-    if [ $plugin = "attached-clients" ]; then
-      IFS=' ' read -r -a colors <<<$(get_tmux_option "@dracula-attached-clients-colors" "cyan dark_gray")
-      script="#($current_dir/attached_clients.sh)"
+    if [ $plugin = "network-vpn" ]; then
+      IFS=' ' read -r -a colors <<<$(get_tmux_option "@dracula-network-vpn-colors" "cyan dark_gray")
+      script="#($current_dir/network_vpn.sh)"
     fi
 
     if [ $plugin = "weather" ]; then
