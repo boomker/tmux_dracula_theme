@@ -226,6 +226,18 @@ Switch from default fahrenheit to celsius
 set -g @dracula-show-fahrenheit false
 ```
 
+Set your location manually
+
+```bash
+set -g @dracula-fixed-location "Some City"
+```
+
+Hide your location
+
+```bash
+set -g @dracula-show-location false
+```
+
 
 #### attached-clients options
 
@@ -241,4 +253,3 @@ Set the label when there is one client, or more than one client
 set -g @dracula-clients-singular client
 set -g @dracula-clients-plural clients
 ```
-
