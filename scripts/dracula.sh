@@ -26,6 +26,7 @@ main()
   show_refresh=$(get_tmux_option "@dracula-refresh-rate" 5)
   time_format=$(get_tmux_option "@dracula-time-format" "%Y-%m-%d(%a) %H:%M")
   IFS=' ' read -r -a plugins <<< $(get_tmux_option "@dracula-plugins" "battery network weather")
+  show_empty_plugins=$(get_tmux_option "@dracula-show-empty-plugins" true)
 
   # Dracula Color Pallette
   white='#f8f8f2'
@@ -222,10 +223,18 @@ main()
     fi
 
     if $show_powerline; then
-      tmux set-option -ga status-right "#[fg=${!colors[0]},bg=${powerbg},nobold,nounderscore,noitalics]${right_sep}#[fg=${!colors[1]},bg=${!colors[0]}] $script"
+      if $show_empty_plugins; then
+        tmux set-option -ga status-right "#[fg=${!colors[0]},bg=${powerbg},nobold,nounderscore,noitalics]${right_sep}#[fg=${!colors[1]},bg=${!colors[0]}] $script "
+      else
+        tmux set-option -ga status-right "#{?#{==:$script,},,#[fg=${!colors[0]},nobold,nounderscore,noitalics]${right_sep}#[fg=${!colors[1]},bg=${!colors[0]}] $script }"
+      fi
       powerbg=${!colors[0]}
     else
-      tmux set-option -ga status-right "#[fg=${!colors[1]},bg=${!colors[0]}] $script "
+      if $show_empty_plugins; then
+        tmux set-option -ga status-right "#[fg=${!colors[1]},bg=${!colors[0]}] $script "
+      else
+        tmux set-option -ga status-right "#{?#{==:$script,},,#[fg=${!colors[1]},bg=${!colors[0]}] $script }"
+      fi
     fi
   done
 
