@@ -24,8 +24,9 @@ main()
   show_border_contrast=$(get_tmux_option "@dracula-border-contrast" false)
   show_day_month=$(get_tmux_option "@dracula-day-month" false)
   show_refresh=$(get_tmux_option "@dracula-refresh-rate" 5)
-  time_format=$(get_tmux_option "@dracula-time-format" "%Y-%m-%d(%a) %H:%M")
-  IFS=' ' read -r -a plugins <<< $(get_tmux_option "@dracula-plugins" "battery network weather")
+  # time_format=$(get_tmux_option "@dracula-time-format" "%Y-%m-%d(%a) %H:%M")
+  show_kubernetes_context_label=$(get_tmux_option "@dracula-kubernetes-context-label" "")
+  IFS=' ' read -r -a plugins <<< "$(get_tmux_option "@dracula-plugins" "job battery network weather")"
   show_empty_plugins=$(get_tmux_option "@dracula-show-empty-plugins" true)
 
   # Dracula Color Pallette
@@ -34,12 +35,12 @@ main()
   dark_gray='#282a36'
   light_purple='#bd93f9'
   dark_purple='#6272a4'
-  cyan='#8be9fd'
   green='#a7d08c'
+  yellow='#f1fa8c'
+  cyan='#8be9fd'
   orange='#ffb86c'
   red='#ff5555'
   pink='#ff79c6'
-  yellow='#f1fa8c'
 
   # Handle left icon configuration
   case $show_left_icon in
@@ -56,7 +57,7 @@ main()
   # Handle left icon padding
   padding=""
   if [ "$show_left_icon_padding" -gt "0" ]; then
-    padding="$(printf '%*s' $show_left_icon_padding)"
+    padding="$(printf '%*s' ${show_left_icon_padding})"
   fi
   left_icon="$left_icon$padding"
 
@@ -68,7 +69,7 @@ main()
 
   # start weather script in background
   if [[ "${plugins[*]}" =~ "weather" ]]; then
-    $current_dir/sleep_weather.sh $show_fahrenheit $show_location $fixed_location &
+    "${current_dir}/sleep_weather.sh" "${show_fahrenheit}" "${show_location}" "${fixed_location}" &
   fi
 
   # Set timezone unless hidden by configuration
@@ -89,7 +90,7 @@ main()
   esac
 
   # sets refresh interval to every 5 seconds
-  tmux set-option -g status-interval $show_refresh
+  tmux set-option -g status-interval "${show_refresh}"
 
   # set the prefix + t time format
   if $show_military; then
@@ -130,65 +131,69 @@ main()
 
   for plugin in "${plugins[@]}"; do
 
-    if [ $plugin = "cwd" ]; then
-      IFS=' ' read -r -a colors  <<< $(get_tmux_option "@dracula-cwd-colors" "dark_gray white")
+    if [ "${plugin}" = "cwd" ]; then
+      IFS=' ' read -r -a colors  <<< "$(get_tmux_option "@dracula-cwd-colors" "dark_gray white")"
       tmux set-option -g status-right-length 250
       script="#($current_dir/cwd.sh)"
     fi
 
-    if [ $plugin = "git" ]; then
-      IFS=' ' read -r -a colors  <<< $(get_tmux_option "@dracula-git-colors" "green dark_gray")
-        script="#($current_dir/git.sh)"     
+    if [ "$plugin" = "git" ]; then
+      IFS=' ' read -r -a colors  <<< "$(get_tmux_option "@dracula-git-colors" "green dark_gray")"
+      script="#($current_dir/git.sh)"
 
-    elif [ $plugin = "battery" ]; then
-      IFS=' ' read -r -a colors <<< $(get_tmux_option "@dracula-battery-colors" "pink dark_gray")
+    elif [ "${plugin}" = "job" ]; then
+      IFS=' ' read -r -a colors  <<< "$(get_tmux_option "@dracula-job-colors" "green dark_gray")"
+      script="#($current_dir/job.sh)"
+
+    elif [ "${plugin}" = "battery" ]; then
+      IFS=' ' read -r -a colors <<< "$(get_tmux_option "@dracula-battery-colors" "pink dark_gray")"
       script="#($current_dir/battery.sh)"
 
-    elif [ $plugin = "gpu-usage" ]; then
-      IFS=' ' read -r -a colors <<< $(get_tmux_option "@dracula-gpu-usage-colors" "pink dark_gray")
+    elif [ "$plugin" = "gpu-usage" ]; then
+      IFS=' ' read -r -a colors <<< "$(get_tmux_option "@dracula-gpu-usage-colors" "pink dark_gray")"
       script="#($current_dir/gpu_usage.sh)"
 
-    elif [ $plugin = "cpu-usage" ]; then
-      IFS=' ' read -r -a colors <<< $(get_tmux_option "@dracula-cpu-usage-colors" "orange dark_gray")
+    elif [ "$plugin" = "cpu-usage" ]; then
+      IFS=' ' read -r -a colors <<< "$(get_tmux_option "@dracula-cpu-usage-colors" "orange dark_gray")"
       script="#($current_dir/cpu_info.sh)"
 
-    elif [ $plugin = "ram-usage" ]; then
-      IFS=' ' read -r -a colors <<< $(get_tmux_option "@dracula-ram-usage-colors" "cyan dark_gray")
+    elif [ "$plugin" = "ram-usage" ]; then
+      IFS=' ' read -r -a colors <<< "$(get_tmux_option "@dracula-ram-usage-colors" "cyan dark_gray")"
       script="#($current_dir/ram_info.sh)"
 
-    elif [ $plugin = "network" ]; then
-      IFS=' ' read -r -a colors <<< $(get_tmux_option "@dracula-network-colors" "cyan dark_gray")
+    elif [ "$plugin" = "network" ]; then
+      IFS=' ' read -r -a colors <<< "$(get_tmux_option "@dracula-network-colors" "cyan dark_gray")"
       script="#($current_dir/network.sh)"
 
-    elif [ $plugin = "network-bandwidth" ]; then
-      IFS=' ' read -r -a colors <<< $(get_tmux_option "@dracula-network-bandwidth-colors" "cyan dark_gray")
+    elif [ "$plugin" = "network-bandwidth" ]; then
+      IFS=' ' read -r -a colors <<< "$(get_tmux_option "@dracula-network-bandwidth-colors" "cyan dark_gray")"
       tmux set-option -g status-right-length 250
       script="#($current_dir/network_bandwidth.sh)"
 
-    elif [ $plugin = "network-ping" ]; then
-      IFS=' ' read -r -a colors <<<$(get_tmux_option "@dracula-network-ping-colors" "cyan dark_gray")
+    elif [ "$plugin" = "network-ping" ]; then
+      IFS=' ' read -r -a colors <<< "$(get_tmux_option "@dracula-network-ping-colors" "cyan dark_gray")"
       script="#($current_dir/network_ping.sh)"
 
-    elif [ $plugin = "spotify-tui" ]; then
-      IFS=' ' read -r -a colors <<<$(get_tmux_option "@dracula-spotify-tui-colors" "green dark_gray")
+    elif [ "$plugin" = "spotify-tui" ]; then
+      IFS=' ' read -r -a colors <<< "$(get_tmux_option "@dracula-spotify-tui-colors" "green dark_gray")"
       script="#($current_dir/spotify-tui.sh)"
 
-    elif [ $plugin = "kubernetes-context" ]; then
-      IFS=' ' read -r -a colors <<<$(get_tmux_option "@dracula-kubernetes-context-colors" "cyan dark_gray")
+    elif [ "$plugin" = "kubernetes-context" ]; then
+      IFS=' ' read -r -a colors <<< "$(get_tmux_option "@dracula-kubernetes-context-colors" "cyan dark_gray")"
       script="#($current_dir/kubernetes_context.sh $show_kubernetes_context_label)"
 
-    elif [ $plugin = "weather" ]; then
+    elif [ "$plugin" = "weather" ]; then
       # wait unit $datafile exists just to avoid errors
       # this should almost never need to wait unless something unexpected occurs
       while [ ! -f $datafile ]; do
         sleep 0.01
       done
 
-      IFS=' ' read -r -a colors <<< $(get_tmux_option "@dracula-weather-colors" "orange dark_gray")
+      IFS=' ' read -r -a colors <<< "$(get_tmux_option "@dracula-weather-colors" "orange dark_gray")"
       script="#(cat $datafile)"
 
-    elif [ $plugin = "time" ]; then
-      IFS=' ' read -r -a colors <<< $(get_tmux_option "@dracula-time-colors" "dark_purple white")
+    elif [ "$plugin" = "time" ]; then
+      IFS=' ' read -r -a colors <<< "$(get_tmux_option "@dracula-time-colors" "dark_purple white")"
       if $show_day_month && $show_military ; then # military time and dd/mm
         script="%a %d/%m %R ${timezone} "
       elif $show_military; then # only military time
